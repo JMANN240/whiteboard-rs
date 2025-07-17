@@ -1,0 +1,49 @@
+#whiteboard {
+    width: 100%;
+    height: 100%;
+}
+
+#colors-container {
+    display: flex;
+    justify-content: center;
+}
+
+#sec-color {
+    color: var(--sec);
+}
+
+#red-color {
+    color: #dd1111;
+}
+
+#blue-color {
+    color: #0044ff;
+}
+
+#green-color {
+    color: #00dd22;
+}
+
+#eraser-color {
+    color: var(--sec);
+}
+
+#saved:checked + #saved-label {
+    background-color: hsla(120,100%,50%,0.25);
+    -webkit-box-shadow: 0 4px 0 0 hsla(120,100%,50%,0.25),0 4px 10px 2px hsla(120,100%,50%,0.25);
+    box-shadow: 0 4px 0 0 hsla(120,100%,50%,0.25),0 4px 10px 2px hsla(120,100%,50%,0.25);
+}
+
+#saved:checked + #saved-label:hover {
+    background-color: hsla(120,100%,50%,0.25);
+    -webkit-box-shadow: 0 3px 0 0 hsla(120,100%,50%,0.25),0 3px 7.5px 1.5px hsla(120,100%,50%,0.25);
+    box-shadow: 0 3px 0 0 hsla(120,100%,50%,0.25),0 3px 7.5px 1.5px hsla(120,100%,50%,0.25);
+    transform: translateY(1px);
+}
+
+#saved:checked + #saved-label:active {
+    background-color: hsla(120,100%,50%,0.25);
+    -webkit-box-shadow: 0 0 0 0 hsla(120,100%,50%,0.25),0 0 0 0 hsla(120,100%,50%,0.25);
+    box-shadow: 0 0 0 0 hsla(120,100%,50%,0.25),0 0 0 0 hsla(120,100%,50%,0.25);
+    transform: translateY(4px);
+}

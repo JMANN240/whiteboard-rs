@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS whiteboards;
+DROP TABLE IF EXISTS strokes;
