@@ -9,7 +9,7 @@ whiteboard.height = window.innerHeight;
 
 var resize_timeout;
 window.addEventListener('resize', (e) => {
-	drawStrokes(ctx, strokes, stroke_offset);
+	draw(ctx, strokes, stroke_offset);
 });
 
 var ctx = whiteboard.getContext("2d");
@@ -35,10 +35,8 @@ var drawStrokes = (context, strokes, offset) => {
 
 var drawPoints = (context, stroke, offset) => {
 	var {x1, y1, x2, y2, color, width} = stroke;
-	if (color == '#ffffff' || color == '#000000') {
+	if (color == '#ffffff' || color == '#000000' || color == 'erase') {
 		context.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--sec');
-	} else if (color == 'erase') {
-		context.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--prim');
 	} else {
 		context.strokeStyle = color;
 	}
@@ -61,7 +59,7 @@ socket = io.connect({
 
 socket.on('strokes', (s) => {
 	strokes = s
-	drawStrokes(ctx, strokes, stroke_offset);
+	draw(ctx, strokes, stroke_offset);
 });
 
 if (getComputedStyle(document.documentElement).getPropertyValue('--sec') == '#ffffff') {
@@ -75,20 +73,22 @@ let erasing = false;
 document.querySelectorAll('#colors-container > button').forEach(button => {
 	button.addEventListener("click", (e) => {
 		if (e.target.id == 'eraser-color') {
-			ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--prim');
-			ctx.lineWidth = 13;
+			ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--sec');
+			ctx.lineWidth = 3;
 			erasing = true;
 		} else {
 			ctx.lineWidth = 3;
 			ctx.strokeStyle = window.getComputedStyle(e.target).color;
 			erasing = false;
 		}
+
+		draw(ctx, strokes, stroke_offset);
 	});
 });
 
 document.querySelector('#center-whiteboard').addEventListener("click", (e) => {
 	stroke_offset = [0, 0];
-	drawStrokes(ctx, strokes, stroke_offset);
+	draw(ctx, strokes, stroke_offset);
 });
 
 document.querySelector('#clear-whiteboard').addEventListener("click", (e) => {
@@ -101,6 +101,8 @@ document.querySelector('#clear-whiteboard').addEventListener("click", (e) => {
 
 let previous_screen_point;
 let previous_whiteboard_point;
+let current_screen_point;
+let current_whiteboard_point;
 
 whiteboard.addEventListener("mousedown", (e) => {
 	previous_screen_point = [e.clientX, e.clientY]
@@ -108,8 +110,8 @@ whiteboard.addEventListener("mousedown", (e) => {
 });
 
 whiteboard.addEventListener("mousemove", (e) => {
-	let current_screen_point = [e.clientX, e.clientY]
-	let current_whiteboard_point = [e.clientX - stroke_offset[0], e.clientY - stroke_offset[1]];
+	current_screen_point = [e.clientX, e.clientY]
+	current_whiteboard_point = [e.clientX - stroke_offset[0], e.clientY - stroke_offset[1]];
 
 	if (e.buttons == 1) {
 		const stroke = {
@@ -122,11 +124,23 @@ whiteboard.addEventListener("mousemove", (e) => {
 			width: ctx.lineWidth
 		};
 
-		ctx.beginPath();
-		ctx.moveTo(previous_screen_point[0], previous_screen_point[1]);
-		ctx.lineTo(current_screen_point[0], current_screen_point[1]);
-		ctx.stroke();
-		strokes.push(stroke);
+		if (!erasing) {
+			ctx.beginPath();
+			ctx.moveTo(previous_screen_point[0], previous_screen_point[1]);
+			ctx.lineTo(current_screen_point[0], current_screen_point[1]);
+			ctx.stroke();
+			strokes.push(stroke);
+		} else {
+			strokes = strokes.filter(stroke => {
+				const dx1 = stroke.x1 - current_whiteboard_point[0];
+				const dy1 = stroke.y1 - current_whiteboard_point[1];
+				const dx2 = stroke.x2 - current_whiteboard_point[0];
+				const dy2 = stroke.y2 - current_whiteboard_point[1];
+
+				return Math.sqrt(Math.pow(dx1, 2) + Math.pow(dy1, 2)) > 20 && Math.sqrt(Math.pow(dx2, 2) + Math.pow(dy2, 2)) > 20;
+			});
+		}
+
 		socket.emit('new-stroke', stroke);
 	}
 	if (e.buttons == 4) {
@@ -134,12 +148,23 @@ whiteboard.addEventListener("mousemove", (e) => {
 		movementY = current_screen_point[1] - previous_screen_point[1];
 		stroke_offset[0] += movementX;
 		stroke_offset[1] += movementY;
-		drawStrokes(ctx, strokes, stroke_offset);
 	}
+
+	draw(ctx, strokes, stroke_offset);
 
 	previous_screen_point = [e.clientX, e.clientY]
 	previous_whiteboard_point = [e.clientX - stroke_offset[0], e.clientY - stroke_offset[1]];
 });
+
+function draw(ctx, strokes, stroke_offset) {
+	drawStrokes(ctx, strokes, stroke_offset);
+
+	if (current_screen_point && erasing) {
+		ctx.beginPath();
+		ctx.arc(current_screen_point[0], current_screen_point[1], 20, 0, 2 * Math.PI);
+		ctx.stroke();
+	}
+}
 
 
 

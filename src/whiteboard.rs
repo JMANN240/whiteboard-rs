@@ -43,22 +43,17 @@ pub async fn whiteboard(
                     body .roboto-100 {
                         div class="modal" {
                             div class="options-card" id="modal-options" {
-                                div class="flex" {
-                                    input style="width: 10ch; flex-grow: 1;" id="nickname-input" type="text" placeholder="Nickname";
-                                    input type="checkbox" id="saved" style="display: none;";
-                                    label style="flex-grow: 1;" for="saved" id="saved-label" { "Save Whiteboard" }
-                                }
                                 div id="colors-container" {
-                                    button id="sec-color" {}
-                                    button id="red-color" { "Red" }
-                                    button id="blue-color" { "Blue" }
-                                    button id="green-color" { "Green" }
-                                    button id="eraser-color" class="bad" { "Eraser" }
+                                    button class="button" id="sec-color" {}
+                                    button class="button" id="red-color" { "Red" }
+                                    button class="button" id="blue-color" { "Blue" }
+                                    button class="button" id="green-color" { "Green" }
+                                    button class="button bad" id="eraser-color" { "Eraser" }
                                 }
-                                button id="center-whiteboard" { "Center Whiteboard" }
+                                button class="button" id="center-whiteboard" { "Center Whiteboard" }
                                 div class="flex" {
-                                    button style="flex-grow: 1;" id="clear-whiteboard" class="bad" { "Clear Whiteboard" }
-                                    button style="flex-grow: 1;" id="home" { "Home" }
+                                    button class="button" style="flex-grow: 1;" id="clear-whiteboard" class="bad" { "Clear Whiteboard" }
+                                    a href="/" class="button" style="flex-grow: 1;" id="home" { "Home" }
                                 }
                             }
                         }

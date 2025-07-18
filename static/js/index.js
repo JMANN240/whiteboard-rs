@@ -1,25 +1,27 @@
-const logged_in = $('#login').length == 0;
-
 var switch_theme_button = document.querySelector('#switch-theme');
 
-if (theme == 'light') {
-    switch_theme_button.innerHTML = 'Blackboard';
-    switch_theme_button.classList.add('blackboard-button');
-} else if (theme == 'dark') {
-    switch_theme_button.innerHTML = 'Whiteboard';
-    switch_theme_button.classList.add('whiteboard-button');
+const updateThemeButton = () => {
+	if (theme == 'light') {
+		switch_theme_button.innerHTML = 'Blackboard';
+		switch_theme_button.classList.add('blackboard-button');
+	} else if (theme == 'dark') {
+		switch_theme_button.innerHTML = 'Whiteboard';
+		switch_theme_button.classList.add('whiteboard-button');
+	}
 }
 
-$('#options-hint').html(touch ? "Two-finger Tap for options." : "Space for options.")
+updateThemeButton();
 
-$('#switch-theme').on('click', (e) => {
+document.querySelector('#options-hint').innerHTML = touch ? "Two-finger Tap for options." : "Space for options.";
+
+document.querySelector('#switch-theme').addEventListener('click', (e) => {
     theme = theme == 'light' ? 'dark' : 'light'
     window.localStorage.setItem('theme', theme);
     update_theme();
-    show_previews();
+	updateThemeButton();
 });
 
-$('#create-whiteboard').on('click', (e) => {
+document.querySelector('#create-whiteboard').addEventListener('click', (e) => {
     $.ajax({
         method: 'POST',
         url: '/whiteboard',
@@ -27,18 +29,6 @@ $('#create-whiteboard').on('click', (e) => {
             window.location.href = `/whiteboard?id=${res}`;
         }
     });
-});
-
-$('#login').on('click', (e) => {
-    window.location.href = `/login`;
-});
-
-$('#signup').on('click', (e) => {
-    window.location.href = `/signup`;
-});
-
-$('#logout').on('click', (e) => {
-    window.location.href = `/logout`;
 });
 
 if (logged_in) {

@@ -5,7 +5,7 @@ use tokio::net::{TcpListener, UnixListener};
 use whiteboard::whiteboard;
 use clap::{Args, Parser};
 use dotenvy::dotenv;
-use maud::{Markup, html};
+use maud::{html, Markup, DOCTYPE};
 use socketio::on_connect;
 use socketioxide::SocketIo;
 use sqlx::SqlitePool;
@@ -79,7 +79,7 @@ where
 
 
     let app = axum::Router::new()
-        .route("/", get(whiteboard))
+        .route("/", get(root))
         .route("/whiteboard", get(whiteboard))
         .fallback_service(ServeDir::new("static"))
         .with_state(app_state)
@@ -88,6 +88,40 @@ where
     info!("Starting server");
 
     axum::serve(listener, app).await.unwrap();
+}
+
+pub async fn root() -> Markup {
+    html! {
+        (DOCTYPE)
+        html {
+            head {
+                (get_meta_tags())
+                script src="/js/theme.js" {}
+                script src="/js/tap.js" defer {}
+                script src="/js/base.js" defer {}
+                link rel="stylesheet" href="/css/base.css";
+
+                script src="/js/index.js" defer {}
+                link rel="stylesheet" href="/css/index.css";
+            }
+            body .roboto-100 {
+                div class="modal" {
+                    div class="options-card" id="modal-options" {
+                        button class="button" id="switch-theme" {}
+                        a href="/whiteboard" class="button" id="create-whiteboard" {
+                            "Create Whiteboard"
+                        }
+                    }
+                }
+                h1 {
+                    "Generate Whiteboard, Share Whiteboard, Simple."
+                }
+                h1 id="options-hint" {
+                    "Space for options."
+                }
+            }
+        }
+    }
 }
 
 pub fn get_meta_tags() -> Markup {
