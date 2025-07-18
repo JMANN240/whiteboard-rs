@@ -1,8 +1,9 @@
-use std::env;
+use std::{env, fmt::Debug, path::PathBuf};
 
-use axum::routing::get;
+use axum::{routing::get, serve::Listener};
+use tokio::net::{TcpListener, UnixListener};
 use whiteboard::whiteboard;
-use clap::Parser;
+use clap::{Args, Parser};
 use dotenvy::dotenv;
 use maud::{Markup, html};
 use socketio::on_connect;
@@ -17,7 +18,18 @@ mod socketio;
 
 #[derive(Parser)]
 struct Cli {
-    port: u16,
+    #[command(flatten)]
+    listen: Listen,
+}
+
+#[derive(Args)]
+#[group(required = true, multiple = false)]
+struct Listen {
+    #[arg(short, group = "listen")]
+    port: Option<u16>,
+
+    #[arg(short, group = "listen")]
+    uds: Option<PathBuf>,
 }
 
 #[derive(Clone)]
@@ -26,10 +38,30 @@ struct AppState {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tracing::subscriber::set_global_default(FmtSubscriber::default())?;
+async fn main() {
+    tracing::subscriber::set_global_default(FmtSubscriber::default()).unwrap();
     let cli = Cli::parse();
-    dotenv()?;
+
+    if let Some(port) = cli.listen.port {
+        serve_with_listener(TcpListener::bind(format!("0.0.0.0:{port}")).await.unwrap()).await;
+    } else if let Some(path) = cli.listen.uds {
+        let _ = tokio::fs::remove_file(&path).await;
+        tokio::fs::create_dir_all(path.parent().unwrap())
+            .await
+            .unwrap();
+
+        let listener = UnixListener::bind(path.clone()).unwrap();
+
+        serve_with_listener(listener).await;
+    }
+}
+
+async fn serve_with_listener<L>(listener: L)
+where
+    L: Listener,
+    L::Addr: Debug,
+{
+    dotenv().unwrap();
 
     let pool = SqlitePool::connect(
         &env::var("DATABASE_URL").expect("DATABASE_URL environment variable not set"),
@@ -55,10 +87,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("Starting server");
 
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", cli.port)).await.unwrap();
     axum::serve(listener, app).await.unwrap();
-
-    Ok(())
 }
 
 pub fn get_meta_tags() -> Markup {
